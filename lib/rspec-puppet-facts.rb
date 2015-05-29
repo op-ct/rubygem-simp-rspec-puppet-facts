@@ -1,5 +1,9 @@
 require 'facter'
+require 'facterdb'
 require 'json'
+require 'pp'
+
+include FacterDB
 
 module RspecPuppetFacts
 
@@ -7,38 +11,24 @@ module RspecPuppetFacts
     opts[:hardwaremodels] ||= ['x86_64']
     opts[:supported_os] ||= RspecPuppetFacts.meta_supported_os
 
+    oses_facts = FacterDB::get_os_facts
+
+    p opts[:supported_os].map { |os_sup| os_sup['operatingsystem'] }
+
     h = {}
 
-    opts[:supported_os].map do |os_sup|
-      operatingsystem = os_sup['operatingsystem'].downcase
-      if os_sup['operatingsystemrelease']
-        os_sup['operatingsystemrelease'].map do |operatingsystemmajrelease|
-          opts[:hardwaremodels].each do |hardwaremodel|
-            os = "#{operatingsystem}-#{operatingsystemmajrelease.split(" ")[0]}-#{hardwaremodel}"
-            # TODO: use SemVer here
-            facter_minor_version = Facter.version[0..2]
-            file = File.expand_path(File.join(File.dirname(__FILE__), "../facts/#{facter_minor_version}/#{os}.facts"))
-            # Use File.exists? instead of File.file? here so that we can stub File.file?
-            if ! File.exists?(file)
-              warn "Can't find facts for '#{os}' for facter #{facter_minor_version}, skipping..."
-            else
-              h[os] = JSON.parse(IO.read(file), :symbolize_names => true)
-            end
-          end
-        end
-      else
-        # Assuming this is a rolling release Operating system
-        opts[:hardwaremodels].each do |hardwaremodel|
-          os = "#{operatingsystem}-#{hardwaremodel}"
-          # TODO: use SemVer here
-          facter_minor_version = Facter.version[0..2]
-          file = File.expand_path(File.join(File.dirname(__FILE__), "../facts/#{facter_minor_version}/#{os}.facts"))
-          # Use File.exists? instead of File.file? here so that we can stub File.file?
-          if ! File.exists?(file)
-            warn "Can't find facts for '#{os}' for facter #{facter_minor_version}, skipping..."
-          else
-            h[os] = JSON.parse(IO.read(file), :symbolize_names => true)
-          end
+    oses_facts.select do |os_facts|
+      opts[:supported_os].each do |os_sup|
+        if os_sup['operatingsystemrelease']
+          h["#{os_facts[:operatingsystem].downcase}-#{os_facts[:operatingsystemmajrelease].split(" ")[0]}-#{os_facts[:hardwaremodel]}"] = os_facts if Facter.version[0..2] == os_facts[:facterversion][0..2] and
+            opts[:hardwaremodels].include?(os_facts[:hardwaremodel]) and
+            os_sup['operatingsystem'] == os_facts[:operatingsystem] and
+            os_sup['operatingsystemrelease'].include?(os_facts[:operatingsystemmajrelease])
+        else
+          h["#{os_facts[:operatingsystem].downcase}-#{os_facts[:hardwaremodel]}"] = os_facts if 
+          Facter.version[0..2] == os_facts[:facterversion][0..2] and
+            opts[:hardwaremodels].include?(os_facts[:hardwaremodel]) and
+            os_facts[:operatingsystem] == os_sup['operatingsystem']
         end
       end
     end
