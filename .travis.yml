@@ -11,11 +11,12 @@ rvm:
   - 2.1.9
   - 2.4.0
   - 2.0.0
-  - 1.9.3  
+  - 1.9.3
 env:
   # Note: Facter 3.x is CFacter, and not a gem
   matrix:
   - FACTER_GEM_VERSION="~> 2.5.0" GEM_PUBLISH=true
+  - FACTER_GEM_VERSION="~> 2.5.0"
   - FACTER_GEM_VERSION="~> 1.7.0"
   - FACTER_GEM_VERSION="~> 2.0.0"
   - FACTER_GEM_VERSION="~> 2.1.0"
@@ -39,9 +40,17 @@ matrix:
     - rvm: 2.0.0
       env: FACTER_GEM_VERSION="~> 1.7.0"
     - rvm: 2.1.9
-      env: FACTER_GEM_VERSION="~> 1.7.0"     
-    - rvm: 2.4.0  
       env: FACTER_GEM_VERSION="~> 1.7.0"
+    - rvm: 2.4.0
+      env: FACTER_GEM_VERSION="~> 1.7.0"
+    - rvm: 1.9.3
+      env: FACTER_GEM_VERSION="~> 2.5.0" GEM_PUBLISH=true
+    - rvm: 2.1.9
+      env: FACTER_GEM_VERSION="~> 2.5.0"
+    - rvm: 2.0.0
+      env: FACTER_GEM_VERSION="~> 2.5.0" GEM_PUBLISH=true
+    - rvm: 2.4.0
+      env: FACTER_GEM_VERSION="~> 2.5.0" GEM_PUBLISH=true
 before_deploy:
   - "export GEM_VERSION=`ruby -r ./lib/simp/version.rb -e 'puts Simp::RspecPuppetFacts::VERSION'`"
   - '[[ $TRAVIS_TAG =~ ^${GEM_VERSION}$ ]]'
