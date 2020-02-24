@@ -17,6 +17,10 @@ env:
 
 matrix:
   fast_finish: true
+jobs:
+  include:
+    - name: "Syntax check factsets"
+      script: "bundle exec rake syntax:facts"
 before_deploy:
   - "export GEM_VERSION=`ruby -r ./lib/simp/version.rb -e 'puts Simp::RspecPuppetFacts::VERSION'`"
   - '[[ $TRAVIS_TAG =~ ^${GEM_VERSION}$ ]]'
