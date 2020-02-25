@@ -1,6 +1,6 @@
 ---
+os: linux
 language: ruby
-sudo: false
 cache: bundler
 before_install: rm Gemfile.lock || true
 script:
@@ -10,15 +10,16 @@ notifications:
 rvm:
   - 2.4.5
 
-env:
-  # Note: Facter 3.x is CFacter, and not a gem
-  matrix:
-  - FACTER_GEM_VERSION="~> 2.5.0" GEM_PUBLISH=true
+jobs:
+  include:
+  - language: ruby
+    name: Check syntax of factsets
+    os: linux
+    script:
+    - "bundle exec rake syntax:facts"
+    # Note: Facter 3.x is CFacter, and not a gem
+    env: FACTER_GEM_VERSION="~> 2.5.0" GEM_PUBLISH=true
 
-script:
-  - "bundle exec rake syntax:facts"
-matrix:
-  fast_finish: true
 before_deploy:
   - "export GEM_VERSION=`ruby -r ./lib/simp/version.rb -e 'puts Simp::RspecPuppetFacts::VERSION'`"
   - '[[ $TRAVIS_TAG =~ ^${GEM_VERSION}$ ]]'
