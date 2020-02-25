@@ -17,11 +17,21 @@ env: FACTER_GEM_VERSION="~> 2.5.0" GEM_PUBLISH=true
 
 
 jobs:
+  allow_failures:
+    - stage: test
   include:
   - stage: syntax
     name: Check syntax of factsets
     script:
     - "bundle exec rake syntax:facts"
+  - stage: syntax
+    name: Check syntax of ruby
+    script:
+    - "bundle exec rubocop lib"
+  - stage: test
+    name: Spec tests (tests nothing)
+    script:
+    - "bundle exec rake spec"
   - stage: test
     name: Acceptance CentOS 7
     env: 'BEAKER_HYPERVISOR=docker PUPPET_VERSION="~> 5.5" BEAKER_PUPPET_COLLECTION=puppet5'
