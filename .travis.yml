@@ -3,22 +3,30 @@ os: linux
 language: ruby
 cache: bundler
 before_install: rm Gemfile.lock || true
-script:
-  - bundle exec rake spec
 notifications:
   email: false
 rvm:
   - 2.4.5
+stages:
+  - syntax
+  - test
+  - deploy
+
+# Note: Facter 3.x is CFacter, and not a gem
+env: FACTER_GEM_VERSION="~> 2.5.0" GEM_PUBLISH=true
+
 
 jobs:
   include:
-  - language: ruby
+  - stage: syntax
     name: Check syntax of factsets
-    os: linux
     script:
     - "bundle exec rake syntax:facts"
-    # Note: Facter 3.x is CFacter, and not a gem
-    env: FACTER_GEM_VERSION="~> 2.5.0" GEM_PUBLISH=true
+  - stage: test
+    name: Acceptance CentOS 7
+    env: 'BEAKER_HYPERVISOR=docker PUPPET_VERSION="~> 5.5" BEAKER_PUPPET_COLLECTION=puppet5'
+    script:
+    - "bundle exec rake beaker:suites[default,centos7]"
 
 before_deploy:
   - "export GEM_VERSION=`ruby -r ./lib/simp/version.rb -e 'puts Simp::RspecPuppetFacts::VERSION'`"
